@@ -16,6 +16,10 @@ def generate_launch_description():
             description='TCP server port'
         ),
         DeclareLaunchArgument(
+            'robot', 
+            default_value='rob1'
+        ),
+        DeclareLaunchArgument(
             'log_level', 
             default_value='info'
         ),
@@ -27,6 +31,7 @@ def generate_launch_description():
             parameters=[{
                 'tcp_client.ip': LaunchConfiguration('robot_ip'),
                 'tcp_client.port': LaunchConfiguration('port'),
+                'tcp_client.robot_prefix': LaunchConfiguration('robot'),
             }],
             arguments=['--ros-args', '--log-level', LaunchConfiguration('log_level')]
         )

@@ -41,17 +41,37 @@ class TcpClientService(Node):
         cls = cls.strip()
         func = func.strip()
 
-        # If user already passed a full method like "rob1.RobotState.getTcpPose"
-        if '.' in func and func.startswith(self.robot_prefix + '.'):
+        # List of classes that DO NOT use robot_prefix
+        NO_PREFIX_CLASSES = ["Math"]
+
+        if '.' in func:
+            # Example: "Math.add" → no prefix
+            if any(func.startswith(f"{c}.") for c in NO_PREFIX_CLASSES):
+                return func
+
+            # Example: "rob1.RobotState.getTcpPose"
+            if func.startswith(self.robot_prefix + "."):
+                return func
+
+            # For something like "RobotState.getTcpPose"
+            # We treat this as a class + func format
+            parts = func.split(".")
+            if len(parts) == 2:
+                c, f = parts
+                if c in NO_PREFIX_CLASSES:
+                    return f"{c}.{f}"
+                return f"{self.robot_prefix}.{c}.{f}"
+
+            # Unexpected format → keep original
             return func
 
-        # If user passed something like "RobotState.getTcpPose"
-        if '.' in func and not func.startswith(self.robot_prefix + '.'):
-            return f'{self.robot_prefix}.{func}'
-
-        # If user passed class + function
         if cls:
-            return f'{self.robot_prefix}.{cls}.{func}'
+            # If class is in no-prefix list → no prefix
+            if cls in NO_PREFIX_CLASSES:
+                return f"{cls}.{func}"
+            return f"{self.robot_prefix}.{cls}.{func}"
+
+        return f"{self.robot_prefix}.{func}"
 
     def connect_tcp(self):
         if self.sock:
